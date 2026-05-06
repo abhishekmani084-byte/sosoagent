@@ -462,3 +462,5 @@ h1 {
   .terminal-section { grid-column: span 1; }
   h1 { font-size: 3rem; }
 }
+.strategy-selector { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border); } .strat-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; } .strat-btns button { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-dim); padding: 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: var(--transition); } .strat-btns button.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); } .pnl-badge.negative { color: var(--danger); } .pnl-small { font-size: 0.75rem; margin-left: 5px; vertical-align: middle; }
+.health-bar-wrap { margin-top: 25px; text-align: left; } .health-info { display: flex; justify-content: space-between; margin-bottom: 8px; } .health-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; } .health-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); box-shadow: 0 0 10px var(--primary-glow); }

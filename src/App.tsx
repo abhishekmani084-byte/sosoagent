@@ -35,6 +35,7 @@ function App() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string>("");
   const [balance, setBalance] = useState<number>(10000);
+  const [strategy, setStrategy] = useState<string>("Aggressive");
   const [holdings, setHoldings] = useState<{symbol: string, amount: number, entry: number}[]>([]);
   const [logs, setLogs] = useState<{time: string, cmd: string, msg: string}[]>([
     { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agentic Kernel v2.1.0 loaded." }
@@ -42,6 +43,13 @@ function App() {
 
   const addLog = (cmd: string, msg: string) => {
     setLogs(prev => [{ time: new Date().toLocaleTimeString(), cmd, msg }, ...prev].slice(0, 20));
+  };
+
+  const calculateTotalPnL = () => {
+    return holdings.reduce((acc, h) => {
+      const current = data.find(d => d.symbol === h.symbol)?.price || h.entry;
+      return acc + (current - h.entry) * h.amount;
+    }, 0);
   };
 
   const connectWallet = () => {
@@ -167,18 +175,17 @@ function App() {
     }
 
     setLoading(true);
-    addLog("EXEC", "Analyzing AI confidence scores for all assets...");
+    addLog("EXEC", `Initializing ${strategy} deployment sequence...`);
     
     setTimeout(() => {
-      // Logic: Pick the asset with the most bullish news or highest 24h gain
       const sortedByGain = [...data].sort((a, b) => b.change24h - a.change24h);
-      const target = sortedByGain[0]; // Pick the current 'Best' performer
+      const target = sortedByGain[0]; 
       
-      addLog("SIGNAL", `High-confidence alpha identified for ${target.symbol}. Score: 0.94`);
+      addLog("RISK", `Risk Parameters: ${strategy === 'Aggressive' ? 'High' : 'Low'} | Leverage: 1x`);
+      addLog("SIGNAL", `Detected ${target.symbol} breakout pattern via SoSo Intelligence.`);
       
       setTimeout(() => {
         const currentPrice = target.price;
-        // Dynamic amount based on coin
         const tradeAmount = target.symbol === "BTC" ? 0.02 : target.symbol === "ETH" ? 0.5 : 10;
         const cost = tradeAmount * currentPrice;
         
@@ -189,7 +196,7 @@ function App() {
         setHoldings(prev => [
           { symbol: target.symbol, amount: tradeAmount, entry: currentPrice },
           ...prev
-        ].slice(0, 5)); // Keep last 5 positions for UI
+        ].slice(0, 5));
 
         addLog("TRADE", `Executed BUY: ${tradeAmount} ${target.symbol} @ $${currentPrice.toLocaleString()}`);
         
@@ -264,31 +271,45 @@ function App() {
           <div className="glass-card portfolio-card">
             <h3 className="card-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-              Portfolio
+              Institutional Portfolio
             </h3>
             <div className="balance-wrap">
-              <span className="pos-meta">Available Liquidity</span>
+              <span className="pos-meta">Net Liquid Assets</span>
               <h2>${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
-              <div className="pnl-badge">+$240.50 (2.4%)</div>
+              <div className={`pnl-badge ${calculateTotalPnL() >= 0 ? 'positive' : 'negative'}`}>
+                {calculateTotalPnL() >= 0 ? '+' : ''}${calculateTotalPnL().toFixed(2)} Live Profit
+              </div>
+            </div>
+
+            <div className="strategy-selector">
+              <span className="pos-meta">Agent Strategy</span>
+              <div className="strat-btns">
+                <button className={strategy === 'Conservative' ? 'active' : ''} onClick={() => setStrategy('Conservative')}>CONSERVATIVE</button>
+                <button className={strategy === 'Aggressive' ? 'active' : ''} onClick={() => setStrategy('Aggressive')}>AGGRESSIVE</button>
+              </div>
             </div>
             
             <div className="positions-list">
-              <h4 className="card-title" style={{fontSize: '0.7rem'}}>Active Positions</h4>
+              <h4 className="card-title" style={{fontSize: '0.7rem'}}>Live Positions</h4>
               {holdings.length === 0 ? (
                 <p className="pos-meta">No active agent positions</p>
               ) : (
-                holdings.map((h, i) => (
-                  <div className="position-row" key={i}>
-                    <div>
-                      <div className="pos-coin">{h.symbol}</div>
-                      <div className="pos-meta">{h.amount} units</div>
+                holdings.map((h, i) => {
+                  const currentPrice = data.find(d => d.symbol === h.symbol)?.price || h.entry;
+                  const pnl = (currentPrice - h.entry) * h.amount;
+                  return (
+                    <div className="position-row" key={i}>
+                      <div>
+                        <div className="pos-coin">{h.symbol} <span className="pnl-small" style={{color: pnl >= 0 ? 'var(--success)' : 'var(--danger)'}}>{pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}</span></div>
+                        <div className="pos-meta">{h.amount} units @ ${h.entry.toLocaleString()}</div>
+                      </div>
+                      <div style={{textAlign: 'right'}}>
+                        <div className="pos-coin">${currentPrice.toLocaleString()}</div>
+                        <div className="pos-meta">Market Price</div>
+                      </div>
                     </div>
-                    <div style={{textAlign: 'right'}}>
-                      <div className="pos-coin">${h.entry.toLocaleString()}</div>
-                      <div className="pos-meta">Entry Price</div>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -296,8 +317,17 @@ function App() {
           {/* Middle Column */}
           <div className="middle-col">
             <div className="glass-card sentiment-hero">
-               <h3 className="card-title" style={{justifyContent: 'center'}}>AI Global Sentiment</h3>
+               <h3 className="card-title" style={{justifyContent: 'center'}}>Market Intelligence</h3>
                <div className={`insight-val ${insight.type}`}>{insight.text}</div>
+               <div className="health-bar-wrap">
+                 <div className="health-info">
+                   <span className="pos-meta">Network Health</span>
+                   <span className="pos-meta" style={{color: 'var(--success)'}}>98% STABLE</span>
+                 </div>
+                 <div className="health-bar">
+                   <div className="health-fill" style={{width: '98%'}}></div>
+                 </div>
+               </div>
             </div>
 
             <div className="ticker-grid">
