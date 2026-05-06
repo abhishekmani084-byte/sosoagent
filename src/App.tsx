@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "./App.css";
 
 const API_KEY = import.meta.env.VITE_SOSO_API_KEY;
@@ -35,12 +35,12 @@ function App() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string>("");
   const [balance, setBalance] = useState<number>(10000);
-  const [strategy, setStrategy] = useState<string>("Aggressive");
+  const [strategy] = useState<string>("Aggressive");
   const [selectedAsset, setSelectedAsset] = useState<string>("BTC");
   const [holdings, setHoldings] = useState<{symbol: string, amount: number, entry: number, timestamp: number}[]>([]);
   const [stats, setStats] = useState({ totalTrades: 0, totalVolume: 0 });
-  const [sessionStart] = useState<number>(Date.now());
-  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+  const [sessionStart] = useState<number>(() => Date.now());
+  const [currentTime, setCurrentTime] = useState<number>(sessionStart);
 
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -78,7 +78,17 @@ function App() {
     addLog("AUTH", "Session terminated by user.");
   };
 
-  const fetchMarketData = async () => {
+  const applyMockMarketData = useCallback(() => {
+    const mockTickers: MarketData[] = [
+      { symbol: "BTC", name: "Bitcoin", price: 68432.50, change24h: 2.4, icon: "₿", iconClass: "btc-icon" },
+      { symbol: "ETH", name: "Ethereum", price: 3841.20, change24h: 1.8, icon: "Ξ", iconClass: "eth-icon" },
+      { symbol: "SOL", name: "Solana", price: 145.20, change24h: 5.2, icon: "S", iconClass: "sol-icon" }
+    ];
+    setData(mockTickers);
+    setInsight({ text: "ANALYZING MARKET SIGNALS", type: "neutral" });
+  }, []);
+
+  const fetchMarketData = useCallback(async () => {
     try {
       addLog("SYNC", "Refreshing live oracle feeds...");
       const ids = { btc: "1673723677362319866", eth: "1673723677362319867", sol: "1673723677362319875" };
@@ -89,10 +99,9 @@ function App() {
       ]);
 
       if (!btcRes.ok || !ethRes.ok || !solRes.ok) {
-        useMockMarketData();
+        applyMockMarketData();
         return;
       }
-
       const btcData = await btcRes.json();
       const ethData = await ethRes.json();
       const solData = await solRes.json();
@@ -113,26 +122,18 @@ function App() {
         });
         setApiError(null);
       } else {
-        useMockMarketData();
+        applyMockMarketData();
       }
     } catch (err) {
       console.error("Market fetch error:", err);
       setApiError("Using offline data - market signals throttled.");
-      useMockMarketData();
+      applyMockMarketData();
     }
-  };
+  }, [applyMockMarketData]);
 
-  const useMockMarketData = () => {
-    const mockTickers: MarketData[] = [
-      { symbol: "BTC", name: "Bitcoin", price: 68432.50, change24h: 2.4, icon: "₿", iconClass: "btc-icon" },
-      { symbol: "ETH", name: "Ethereum", price: 3841.20, change24h: 1.8, icon: "Ξ", iconClass: "eth-icon" },
-      { symbol: "SOL", name: "Solana", price: 145.20, change24h: 5.2, icon: "S", iconClass: "sol-icon" }
-    ];
-    setData(mockTickers);
-    setInsight({ text: "ANALYZING MARKET SIGNALS", type: "neutral" });
-  };
 
-  const fetchNews = async () => {
+
+  const fetchNews = useCallback(async () => {
     try {
       const response = await fetch(`${BASE_URL}/news`, {
         headers: { "x-soso-api-key": API_KEY },
@@ -143,7 +144,7 @@ function App() {
         if (result.code === 0 && result.data) {
           const rawNews = result.data.list || result.data;
           if (Array.isArray(rawNews)) {
-            const mappedNews = rawNews.slice(0, 5).map((item: any) => {
+            const mappedNews = rawNews.slice(0, 5).map((item: {id: string, title?: string, content?: string, release_time?: string, author?: string}) => {
               const text = (item.title || item.content || "").toLowerCase();
               let label = "neutral";
               if (text.includes("surge") || text.includes("bullish") || text.includes("up") || text.includes("rise") || text.includes("gain")) label = "bullish";
@@ -168,17 +169,17 @@ function App() {
       setApiError("Alpha feed interrupted - check network.");
       setApiLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchMarketData();
-    fetchNews();
-    const interval = setInterval(() => {
-      fetchMarketData();
-      fetchNews();
-    }, 30000); 
+    const fetchData = async () => {
+      await fetchMarketData();
+      await fetchNews();
+    };
+    fetchData();
+    const interval = setInterval(fetchData, 30000); 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchMarketData, fetchNews]);
 
   const handleTrade = () => {
     if (!walletAddress) {
@@ -242,18 +243,11 @@ function App() {
 
   const closeModal = () => setShowModal(false);
 
-  const formatPrice = (price: number, symbol: string) => {
-    if (symbol === "TOTAL") return `${price.toFixed(2)}T`;
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(price);
-  };
+
 
   const getTimeAgo = (dateStr: string) => {
     const timestamp = isNaN(Number(dateStr)) ? new Date(dateStr).getTime() : Number(dateStr);
-    const diff = Date.now() - timestamp;
+    const diff = currentTime - timestamp;
     const mins = Math.floor(diff / 60000);
     if (mins < 0) return "Just now";
     if (mins < 60) return `${mins}m ago`;
@@ -294,6 +288,7 @@ function App() {
           </div>
           <h1>Soso<span className="highlight">Agent</span></h1>
           <p className="subtitle">AI-Autonomous Alpha Discovery & Execution</p>
+          {apiError && <div className="api-error-notice">{apiError}</div>}
         </header>
 
         <div className="dashboard-grid">
