@@ -36,13 +36,12 @@ function App() {
   const [txHash, setTxHash] = useState<string>("");
   const [balance, setBalance] = useState<number>(10000);
   const [holdings, setHoldings] = useState<{symbol: string, amount: number, entry: number}[]>([]);
-  const [tradeHistory, setTradeHistory] = useState<{type: string, symbol: string, amount: number, price: number, time: string}[]>([]);
   const [logs, setLogs] = useState<{time: string, cmd: string, msg: string}[]>([
     { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agentic Kernel v2.1.0 loaded." }
   ]);
 
   const addLog = (cmd: string, msg: string) => {
-    setLogs(prev => [{ time: new Date().toLocaleTimeString(), cmd, msg }, ...prev].slice(0, 10));
+    setLogs(prev => [{ time: new Date().toLocaleTimeString(), cmd, msg }, ...prev].slice(0, 20));
   };
 
   const connectWallet = () => {
@@ -82,7 +81,7 @@ function App() {
         ];
         setData(tickers);
         setInsight({ 
-          text: b.change_pct_24h > 0 ? "🚀 AGENT SIGNAL: BULLISH MOMENTUM" : "⚖️ AGENT SIGNAL: MARKET CONSOLIDATING", 
+          text: b.change_pct_24h > 0 ? "BULLISH MOMENTUM" : "MARKET CONSOLIDATING", 
           type: b.change_pct_24h > 0 ? "success" : "neutral" 
         });
         setApiError(null);
@@ -103,7 +102,7 @@ function App() {
       { symbol: "TOTAL", name: "Market Cap", price: 2.56, change24h: 1.2, icon: "M", iconClass: "sol-icon" }
     ];
     setData(mockTickers);
-    setInsight({ text: "⚖️ ANALYZING MARKET SIGNALS", type: "neutral" });
+    setInsight({ text: "ANALYZING MARKET SIGNALS", type: "neutral" });
   };
 
   const fetchNews = async () => {
@@ -169,7 +168,7 @@ function App() {
     setTimeout(() => {
       const btc = data.find(d => d.symbol === "BTC");
       const currentPrice = btc ? btc.price : 81200;
-      const tradeAmount = 0.02; // Fixed for demo
+      const tradeAmount = 0.02; 
       const cost = tradeAmount * currentPrice;
       
       const hash = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase() + "..." + Math.random().toString(16).slice(2, 6).toUpperCase();
@@ -178,10 +177,6 @@ function App() {
       setBalance(prev => prev - cost);
       setHoldings(prev => [
         { symbol: "BTC", amount: tradeAmount, entry: currentPrice },
-        ...prev
-      ]);
-      setTradeHistory(prev => [
-        { type: "BUY", symbol: "BTC", amount: tradeAmount, price: currentPrice, time: new Date().toLocaleTimeString() },
         ...prev
       ]);
 
@@ -226,13 +221,13 @@ function App() {
 
   return (
     <>
-      <div className="ambient-blob blob-1"></div>
-      <div className="ambient-blob blob-2"></div>
+      <div className="app-bg"></div>
+      <div className="ambient-grid"></div>
       
       <div className="app-container">
         <nav className="top-nav">
           <div className="logo">
-            <div className="logo-icon">S</div>
+            <div className="logo-symbol">S</div>
             <span>SOSO_AGENT</span>
           </div>
           <button className="wallet-btn" onClick={walletAddress ? disconnectWallet : connectWallet}>
@@ -243,7 +238,10 @@ function App() {
         </nav>
 
         <header>
-          <div className="badge">SoSoValue Agentic Hackathon</div>
+          <div className="hack-badge">
+            <span className="pulse-dot"></span>
+            SoSoValue Buildathon 2026
+          </div>
           <h1>Soso<span className="highlight">Agent</span></h1>
           <p className="subtitle">AI-Autonomous Alpha Discovery & Execution</p>
         </header>
@@ -253,147 +251,127 @@ function App() {
           {/* Portfolio Card */}
           <div className="glass-card portfolio-card">
             <h3 className="card-title">
-              <svg className="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-              Agent Portfolio
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              Portfolio
             </h3>
-            <div className="portfolio-content">
-              <div className="balance-item">
-                <span>Available Balance</span>
-                <h2>${balance.toLocaleString(undefined, {minimumFractionDigits: 2})} <small>USDT</small></h2>
-              </div>
-              <div className="positions-section">
-                <h4>Open Positions</h4>
-                {holdings.length === 0 ? (
-                  <p className="empty-txt">No active positions</p>
-                ) : (
-                  holdings.map((h, i) => (
-                    <div className="mini-pos" key={i}>
-                      <span>{h.symbol}</span>
-                      <span>{h.amount} units @ ${h.entry.toLocaleString()}</span>
+            <div className="balance-wrap">
+              <span className="pos-meta">Available Liquidity</span>
+              <h2>${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
+              <div className="pnl-badge">+$240.50 (2.4%)</div>
+            </div>
+            
+            <div className="positions-list">
+              <h4 className="card-title" style={{fontSize: '0.7rem'}}>Active Positions</h4>
+              {holdings.length === 0 ? (
+                <p className="pos-meta">No active agent positions</p>
+              ) : (
+                holdings.map((h, i) => (
+                  <div className="position-row" key={i}>
+                    <div>
+                      <div className="pos-coin">{h.symbol}</div>
+                      <div className="pos-meta">{h.amount} units</div>
                     </div>
-                  ))
-                )}
-              </div>
+                    <div style={{textAlign: 'right'}}>
+                      <div className="pos-coin">${h.entry.toLocaleString()}</div>
+                      <div className="pos-meta">Entry Price</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* AI Sentiment Card */}
-          <div className="glass-card insight-card">
-            <h3 className="card-title">
-              <svg className="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-              AI Global Sentiment
-            </h3>
-            <p className={`insight-text ${insight.type}`}>{insight.text}</p>
-          </div>
-
-          {/* Market Tickers */}
-          <div className="glass-card">
-            <h3 className="card-title">
-              <svg className="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-              SoSo Intelligence Data
-            </h3>
-            <div className="tickers-container">
-              {data.map((coin) => (
-                <div className="ticker-item" key={coin.symbol}>
-                  <div className="coin-info">
-                    <div className={`coin-icon ${coin.iconClass}`}>{coin.icon}</div>
-                    <div className="coin-name">
-                      <h4>{coin.symbol}</h4>
-                      <span>{coin.name}</span>
-                    </div>
-                  </div>
-                  <div className="price-info">
-                    <p className="price">{formatPrice(coin.price, coin.symbol)}</p>
-                    <span className={`change ${coin.change24h >= 0 ? 'positive' : 'negative'}`}>
-                      {coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
-              ))}
+          {/* Middle Column */}
+          <div className="middle-col">
+            <div className="glass-card sentiment-hero">
+               <h3 className="card-title" style={{justifyContent: 'center'}}>AI Global Sentiment</h3>
+               <div className={`insight-val ${insight.type}`}>{insight.text}</div>
             </div>
-            {apiError && <p className="error-small">{apiError}</p>}
-          </div>
 
-          {/* News Feed with Sentiment */}
-          <div className="glass-card">
-            <h3 className="card-title">
-              <svg className="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 20l-7-7-7 7V4h14v16z"></path></svg>
-              Alpha Feed (AI Scored)
-            </h3>
-            <div className="news-feed">
-              {news.map(item => (
-                <div className="news-item" key={item.id} style={{ borderLeftColor: item.sentiment?.label === 'bullish' ? 'var(--success)' : item.sentiment?.label === 'bearish' ? 'var(--danger)' : 'var(--primary)' }}>
-                  <div className="news-header">
-                    <span className={`news-cat ${item.sentiment?.label}`}>{item.sentiment?.label || 'Neutral'}</span>
-                    <span className="news-time">{getTimeAgo(item.published_at)}</span>
-                  </div>
-                  <p className="news-title">{item.title}</p>
+            <div className="ticker-grid">
+              {data.map(coin => (
+                <div className="mini-ticker" key={coin.symbol}>
+                  <h5>{coin.symbol}</h5>
+                  <p>${coin.price.toLocaleString()}</p>
+                  <span className={`news-label ${coin.change24h >= 0 ? 'bullish' : 'bearish'}`}>
+                    {coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Agentic Execution */}
-          <div className="glass-card execution-card" style={{ gridColumn: "span 2" }}>
-            <h3 className="card-title">
-              <svg className="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              Autonomous Agent Deployment
-            </h3>
-            <div className="execution-content">
-              <p style={{ color: "var(--text-dim)", marginBottom: "30px", maxWidth: "600px", textAlign: "center" }}>
-                Our AI Agent analyzes SoSoValue sentiment and news signals to execute high-probability trades across ValueChain liquidity.
-              </p>
-              
-              <div className="agent-terminal">
-                <div className="terminal-header">
-                  <div className="terminal-dot red"></div>
-                  <div className="terminal-dot yellow"></div>
-                  <div className="terminal-dot green"></div>
-                  <span className="terminal-title">AGENT_LOG v1.0.4</span>
-                </div>
-                <div className="terminal-body">
-                  {logs.map((log, i) => (
-                    <div className="log-line" key={i}>
-                      <span className="time">[{log.time.split(' ')[0]}]</span> 
-                      <span className="cmd">{log.cmd}</span> {log.msg}
+          {/* Right Column: News */}
+          <div className="news-col">
+            <div className="glass-card" style={{height: '100%'}}>
+              <h3 className="card-title">Alpha Feed</h3>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                {news.map(item => (
+                  <div className="news-card" key={item.id}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                      <span className={`news-label ${item.sentiment.label}`}>{item.sentiment.label}</span>
+                      <span className="pos-meta">{getTimeAgo(item.published_at)}</span>
                     </div>
-                  ))}
-                </div>
+                    <p className="news-text">{item.title}</p>
+                  </div>
+                ))}
               </div>
+            </div>
+          </div>
 
-              <div className="btn-container" style={{ marginTop: "40px" }}>
-                <button 
-                  className={`premium-btn ${loading ? 'loading' : ''} ${!walletAddress ? 'disabled' : ''}`} 
-                  onClick={handleTrade} 
-                  disabled={loading}
-                >
-                  {loading ? <div className="spinner"></div> : walletAddress ? "DEPLOY ALPHA AGENT" : "CONNECT WALLET TO DEPLOY"}
-                </button>
-                <div className="status-badge">
-                  <div className="pulse-dot"></div>
-                  Agent Ready: {walletAddress ? "Waiting for Signal" : "Authentication Required"}
+          {/* Terminal Section */}
+          <div className="terminal-section">
+            <div className="terminal-ui">
+              <div className="term-head">
+                <div className="term-controls">
+                  <div className="t-dot red"></div>
+                  <div className="t-dot yellow"></div>
+                  <div className="t-dot green"></div>
+                  <span className="terminal-title">AGENT_ORCHESTRATOR v2.1.0</span>
                 </div>
+                <div className="pos-meta">SYSTEM_STATUS: ACTIVE</div>
               </div>
+              <div className="t-body">
+                {logs.map((log, i) => (
+                  <div className="l-row" key={i}>
+                    <span className="l-time">[{log.time.split(' ')[0]}]</span>
+                    <span className="l-cmd">{log.cmd}</span>
+                    <span className="l-msg">{log.msg}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="deploy-panel">
+              <div style={{maxWidth: '60%'}}>
+                <h4 style={{margin: '0 0 5px'}}>Autonomous Deployment</h4>
+                <p className="pos-meta" style={{margin: 0}}>Execute high-probability alpha based on real-time sentiment signals.</p>
+              </div>
+              <button 
+                className="deploy-btn" 
+                onClick={handleTrade}
+                disabled={loading || !walletAddress}
+              >
+                {loading ? "EXECUTING..." : walletAddress ? "DEPLOY AGENT" : "CONNECT WALLET"}
+              </button>
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Success Modal */}
-      <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
-        <div className="modal-content">
-          <div className="success-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      {/* Modern Modal */}
+      <div className={`modal-bg ${showModal ? 'active' : ''}`}>
+        <div className="modal-box">
+          <div className="m-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          <h2>Agent Deployed!</h2>
-          <p>The AI Agent has initiated strategy execution on SoDEX Protocol based on current sentiment signals.</p>
-          <div className="hash-box">
-            Tx Hash: {txHash}
-          </div>
-          <button className="close-btn" onClick={closeModal}>ACKNOWLEDGE</button>
+          <h2 style={{margin: '0 0 10px'}}>Agent Active</h2>
+          <p className="pos-meta">The orchestrator has initiated your position on ValueChain.</p>
+          <div className="m-hash">{txHash}</div>
+          <button className="m-close" onClick={closeModal}>ACKNOWLEDGE</button>
         </div>
       </div>
     </>
@@ -401,7 +379,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
