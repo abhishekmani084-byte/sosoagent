@@ -76,6 +76,7 @@ function App() {
       }
     } catch (err) {
       console.error("Market fetch error:", err);
+      setApiError("Using offline data - market signals throttled.");
       useMockMarketData();
     }
   };
@@ -112,6 +113,7 @@ function App() {
       setApiLoading(false);
     } catch (err) {
       console.error("News fetch error:", err);
+      setApiError("Alpha feed interrupted - check network.");
       setApiLoading(false); // Still show dashboard even if news fails
     }
   };
