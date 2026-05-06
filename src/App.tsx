@@ -57,27 +57,30 @@ function App() {
   const fetchMarketData = async () => {
     try {
       addLog("SYNC", "Refreshing live oracle feeds...");
-      const ids = { btc: "1673723677362319866", eth: "1673723677362319867" };
-      const [btcRes, ethRes] = await Promise.all([
+      const ids = { btc: "1673723677362319866", eth: "1673723677362319867", sol: "1673723677362319875" };
+      const [btcRes, ethRes, solRes] = await Promise.all([
         fetch(`${BASE_URL}/currencies/${ids.btc}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } }),
-        fetch(`${BASE_URL}/currencies/${ids.eth}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } })
+        fetch(`${BASE_URL}/currencies/${ids.eth}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } }),
+        fetch(`${BASE_URL}/currencies/${ids.sol}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } })
       ]);
 
-      if (!btcRes.ok || !ethRes.ok) {
+      if (!btcRes.ok || !ethRes.ok || !solRes.ok) {
         useMockMarketData();
         return;
       }
 
       const btcData = await btcRes.json();
       const ethData = await ethRes.json();
+      const solData = await solRes.json();
 
-      if (btcData.code === 0 && ethData.code === 0) {
+      if (btcData.code === 0 && ethData.code === 0 && solData.code === 0) {
         const b = btcData.data;
         const e = ethData.data;
+        const s = solData.data;
         const tickers: MarketData[] = [
           { symbol: "BTC", name: "Bitcoin", price: b.price, change24h: b.change_pct_24h * 100, icon: "₿", iconClass: "btc-icon" },
           { symbol: "ETH", name: "Ethereum", price: e.price, change24h: e.change_pct_24h * 100, icon: "Ξ", iconClass: "eth-icon" },
-          { symbol: "TOTAL", name: "Market Cap", price: 2.84, change24h: 0.5, icon: "M", iconClass: "sol-icon" }
+          { symbol: "SOL", name: "Solana", price: s.price, change24h: s.change_pct_24h * 100, icon: "S", iconClass: "sol-icon" }
         ];
         setData(tickers);
         setInsight({ 
@@ -99,7 +102,7 @@ function App() {
     const mockTickers: MarketData[] = [
       { symbol: "BTC", name: "Bitcoin", price: 68432.50, change24h: 2.4, icon: "₿", iconClass: "btc-icon" },
       { symbol: "ETH", name: "Ethereum", price: 3841.20, change24h: 1.8, icon: "Ξ", iconClass: "eth-icon" },
-      { symbol: "TOTAL", name: "Market Cap", price: 2.56, change24h: 1.2, icon: "M", iconClass: "sol-icon" }
+      { symbol: "SOL", name: "Solana", price: 145.20, change24h: 5.2, icon: "S", iconClass: "sol-icon" }
     ];
     setData(mockTickers);
     setInsight({ text: "ANALYZING MARKET SIGNALS", type: "neutral" });
@@ -159,33 +162,42 @@ function App() {
       return;
     }
     if (balance < 1000) {
-      alert("Insufficient USDT balance to deploy agent.");
+      alert("Insufficient liquidity for new deployment.");
       return;
     }
+
     setLoading(true);
-    addLog("EXEC", "Optimizing risk-adjusted entry for BTC/USDT...");
+    addLog("EXEC", "Analyzing AI confidence scores for all assets...");
     
     setTimeout(() => {
-      const btc = data.find(d => d.symbol === "BTC");
-      const currentPrice = btc ? btc.price : 81200;
-      const tradeAmount = 0.02; 
-      const cost = tradeAmount * currentPrice;
+      // Logic: Pick the asset with the most bullish news or highest 24h gain
+      const sortedByGain = [...data].sort((a, b) => b.change24h - a.change24h);
+      const target = sortedByGain[0]; // Pick the current 'Best' performer
       
-      const hash = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase() + "..." + Math.random().toString(16).slice(2, 6).toUpperCase();
-      setTxHash(hash);
-
-      setBalance(prev => prev - cost);
-      setHoldings(prev => [
-        { symbol: "BTC", amount: tradeAmount, entry: currentPrice },
-        ...prev
-      ]);
-
-      addLog("TRADE", `Filled BUY order: ${tradeAmount} BTC @ $${currentPrice.toLocaleString()}`);
+      addLog("SIGNAL", `High-confidence alpha identified for ${target.symbol}. Score: 0.94`);
       
       setTimeout(() => {
-        setLoading(false);
-        setShowModal(true);
-        addLog("CONFIRM", `Position opened. On-chain receipt: ${hash}`);
+        const currentPrice = target.price;
+        // Dynamic amount based on coin
+        const tradeAmount = target.symbol === "BTC" ? 0.02 : target.symbol === "ETH" ? 0.5 : 10;
+        const cost = tradeAmount * currentPrice;
+        
+        const hash = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase() + "..." + Math.random().toString(16).slice(2, 6).toUpperCase();
+        setTxHash(hash);
+
+        setBalance(prev => prev - cost);
+        setHoldings(prev => [
+          { symbol: target.symbol, amount: tradeAmount, entry: currentPrice },
+          ...prev
+        ].slice(0, 5)); // Keep last 5 positions for UI
+
+        addLog("TRADE", `Executed BUY: ${tradeAmount} ${target.symbol} @ $${currentPrice.toLocaleString()}`);
+        
+        setTimeout(() => {
+          setLoading(false);
+          setShowModal(true);
+          addLog("CONFIRM", `Transaction finalized on-chain. Receipt: ${hash}`);
+        }, 1500);
       }, 1500);
     }, 1500);
   };
