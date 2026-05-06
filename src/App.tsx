@@ -37,7 +37,22 @@ function App() {
   const [balance, setBalance] = useState<number>(10000);
   const [strategy, setStrategy] = useState<string>("Aggressive");
   const [selectedAsset, setSelectedAsset] = useState<string>("BTC");
-  const [holdings, setHoldings] = useState<{symbol: string, amount: number, entry: number}[]>([]);
+  const [holdings, setHoldings] = useState<{symbol: string, amount: number, entry: number, timestamp: number}[]>([]);
+  const [stats, setStats] = useState({ totalTrades: 0, totalVolume: 0 });
+  const [sessionStart] = useState<number>(Date.now());
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const getSessionDuration = () => {
+    const diff = currentTime - sessionStart;
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    return `${mins}m ${secs}s`;
+  };
   const [logs, setLogs] = useState<{time: string, cmd: string, msg: string}[]>([
     { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agentic Kernel v2.1.0 loaded." }
   ]);
@@ -194,9 +209,14 @@ function App() {
 
         setBalance(prev => prev - cost);
         setHoldings(prev => [
-          { symbol: target.symbol, amount: tradeAmount, entry: currentPrice },
+          { symbol: target.symbol, amount: tradeAmount, entry: currentPrice, timestamp: Date.now() },
           ...prev
         ].slice(0, 5));
+
+        setStats(prev => ({
+          totalTrades: prev.totalTrades + 1,
+          totalVolume: prev.totalVolume + cost
+        }));
 
         addLog("TRADE", `Executed BUY: ${tradeAmount} ${target.symbol} @ $${currentPrice.toLocaleString()}`);
         
@@ -292,27 +312,35 @@ function App() {
               </div>
             </div>
 
-            <div className="strategy-selector">
-              <span className="pos-meta">Agent Strategy</span>
-              <div className="strat-btns">
-                <button className={strategy === 'Conservative' ? 'active' : ''} onClick={() => setStrategy('Conservative')}>CONSERVATIVE</button>
-                <button className={strategy === 'Aggressive' ? 'active' : ''} onClick={() => setStrategy('Aggressive')}>AGGRESSIVE</button>
+            <div className="stats-grid">
+              <div className="stat-box">
+                <span className="pos-meta">Avg Trade</span>
+                <p>${stats.totalTrades > 0 ? (stats.totalVolume / stats.totalTrades).toLocaleString(undefined, {maximumFractionDigits: 0}) : '0'}</p>
+              </div>
+              <div className="stat-box">
+                <span className="pos-meta">Trades</span>
+                <p>{stats.totalTrades}</p>
+              </div>
+              <div className="stat-box">
+                <span className="pos-meta">Session</span>
+                <p>{getSessionDuration()}</p>
               </div>
             </div>
             
             <div className="positions-list">
-              <h4 className="card-title" style={{fontSize: '0.7rem'}}>Live Positions</h4>
+              <h4 className="card-title" style={{fontSize: '0.7rem', marginTop: '20px'}}>Live Positions</h4>
               {holdings.length === 0 ? (
                 <p className="pos-meta">No active agent positions</p>
               ) : (
                 holdings.map((h, i) => {
                   const currentPrice = data.find(d => d.symbol === h.symbol)?.price || h.entry;
                   const pnl = (currentPrice - h.entry) * h.amount;
+                  const holdTime = Math.floor((currentTime - h.timestamp) / 1000);
                   return (
                     <div className="position-row" key={i}>
                       <div style={{flex: 1}}>
                         <div className="pos-coin">{h.symbol} <span className="pnl-small" style={{color: pnl >= 0 ? 'var(--success)' : 'var(--danger)'}}>{pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}</span></div>
-                        <div className="pos-meta">{h.amount} units @ ${h.entry.toLocaleString()}</div>
+                        <div className="pos-meta">{h.amount} units | {holdTime}s ago</div>
                       </div>
                       <div style={{textAlign: 'right', display: 'flex', alignItems: 'center', gap: '15px'}}>
                         <div>
