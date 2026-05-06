@@ -36,6 +36,7 @@ function App() {
   const [txHash, setTxHash] = useState<string>("");
   const [balance, setBalance] = useState<number>(10000);
   const [strategy, setStrategy] = useState<string>("Aggressive");
+  const [selectedAsset, setSelectedAsset] = useState<string>("BTC");
   const [holdings, setHoldings] = useState<{symbol: string, amount: number, entry: number}[]>([]);
   const [logs, setLogs] = useState<{time: string, cmd: string, msg: string}[]>([
     { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agentic Kernel v2.1.0 loaded." }
@@ -175,14 +176,13 @@ function App() {
     }
 
     setLoading(true);
-    addLog("EXEC", `Initializing ${strategy} deployment sequence...`);
+    addLog("EXEC", `Initiating ${strategy} sequence for ${selectedAsset}...`);
     
     setTimeout(() => {
-      const sortedByGain = [...data].sort((a, b) => b.change24h - a.change24h);
-      const target = sortedByGain[0]; 
+      const target = data.find(d => d.symbol === selectedAsset) || data[0];
       
-      addLog("RISK", `Risk Parameters: ${strategy === 'Aggressive' ? 'High' : 'Low'} | Leverage: 1x`);
-      addLog("SIGNAL", `Detected ${target.symbol} breakout pattern via SoSo Intelligence.`);
+      addLog("RISK", `Asset: ${target.symbol} | Strategy: ${strategy} | Mode: Manual Target`);
+      addLog("SIGNAL", `Optimizing entry for ${target.symbol} via SoSo Intelligence.`);
       
       setTimeout(() => {
         const currentPrice = target.price;
@@ -399,9 +399,19 @@ function App() {
             </div>
 
             <div className="deploy-panel">
-              <div style={{maxWidth: '60%'}}>
-                <h4 style={{margin: '0 0 5px'}}>Autonomous Deployment</h4>
-                <p className="pos-meta" style={{margin: 0}}>Execute high-probability alpha based on real-time sentiment signals.</p>
+              <div style={{maxWidth: '50%'}}>
+                <h4 style={{margin: '0 0 5px'}}>Target Deployment</h4>
+                <div className="asset-picker">
+                  {data.map(coin => (
+                    <button 
+                      key={coin.symbol}
+                      className={`picker-btn ${selectedAsset === coin.symbol ? 'active' : ''}`}
+                      onClick={() => setSelectedAsset(coin.symbol)}
+                    >
+                      {coin.symbol}
+                    </button>
+                  ))}
+                </div>
               </div>
               <button 
                 className="deploy-btn" 
