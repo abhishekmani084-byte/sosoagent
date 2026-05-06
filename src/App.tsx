@@ -33,6 +33,7 @@ function App() {
   const [apiLoading, setApiLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string>("");
   const [logs, setLogs] = useState<{time: string, cmd: string, msg: string}[]>([
     { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agent initialized and ready." }
   ]);
@@ -163,10 +164,13 @@ function App() {
       const price = btc ? btc.price : 81200;
       addLog("TRADE", `Executing BUY order for 0.05 BTC at $${price.toLocaleString()}`);
       
+      const hash = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase() + "..." + Math.random().toString(16).slice(2, 6).toUpperCase();
+      setTxHash(hash);
+
       setTimeout(() => {
         setLoading(false);
         setShowModal(true);
-        addLog("CONFIRM", "Transaction finalized on SoDEX Protocol.");
+        addLog("CONFIRM", `Transaction finalized. Hash: ${hash}`);
       }, 1500);
     }, 1500);
   };
@@ -340,7 +344,7 @@ function App() {
           <h2>Agent Deployed!</h2>
           <p>The AI Agent has initiated strategy execution on SoDEX Protocol based on current sentiment signals.</p>
           <div className="hash-box">
-            Agent ID: SOSO-AG-9284-F8X
+            Tx Hash: {txHash}
           </div>
           <button className="close-btn" onClick={closeModal}>ACKNOWLEDGE</button>
         </div>
