@@ -627,3 +627,4 @@ header h1 {
   .app-container { padding: 30px 15px; }
 }
 
+.portfolio-content { display: flex; flex-direction: column; gap: 20px; } .balance-item span { font-size: 0.9rem; color: var(--text-dim); } .balance-item h2 { margin: 5px 0 0; font-size: 1.8rem; color: var(--primary); } .balance-item small { font-size: 0.9rem; color: var(--text-dim); } .positions-section h4 { margin: 0 0 10px; font-size: 0.9rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; } .empty-txt { color: var(--text-dim); font-style: italic; font-size: 0.9rem; } .mini-pos { display: flex; justify-content: space-between; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; font-size: 0.85rem; margin-bottom: 5px; } .mini-pos span:last-child { color: var(--success); }

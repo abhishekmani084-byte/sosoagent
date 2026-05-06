@@ -34,8 +34,11 @@ function App() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string>("");
+  const [balance, setBalance] = useState<number>(10000);
+  const [holdings, setHoldings] = useState<{symbol: string, amount: number, entry: number}[]>([]);
+  const [tradeHistory, setTradeHistory] = useState<{type: string, symbol: string, amount: number, price: number, time: string}[]>([]);
   const [logs, setLogs] = useState<{time: string, cmd: string, msg: string}[]>([
-    { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agent initialized and ready." }
+    { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agentic Kernel v2.1.0 loaded." }
   ]);
 
   const addLog = (cmd: string, msg: string) => {
@@ -44,17 +47,17 @@ function App() {
 
   const connectWallet = () => {
     setWalletAddress("0x7a2d4E98256e29bc4f8e29bc4f8e29bc4f8e29bc4");
-    addLog("AUTH", "Wallet connected: 0x7a2d...bc4");
+    addLog("AUTH", "Secure handshake established with 0x7a2d...bc4");
   };
 
   const disconnectWallet = () => {
     setWalletAddress(null);
-    addLog("AUTH", "Wallet disconnected.");
+    addLog("AUTH", "Session terminated by user.");
   };
 
   const fetchMarketData = async () => {
     try {
-      addLog("SCAN", "Fetching market snapshots from SoSoValue...");
+      addLog("SYNC", "Refreshing live oracle feeds...");
       const ids = { btc: "1673723677362319866", eth: "1673723677362319867" };
       const [btcRes, ethRes] = await Promise.all([
         fetch(`${BASE_URL}/currencies/${ids.btc}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } }),
@@ -156,21 +159,38 @@ function App() {
       alert("Please connect your wallet first!");
       return;
     }
+    if (balance < 1000) {
+      alert("Insufficient USDT balance to deploy agent.");
+      return;
+    }
     setLoading(true);
-    addLog("EXEC", "Calculating optimal entry based on SoSo sentiment...");
+    addLog("EXEC", "Optimizing risk-adjusted entry for BTC/USDT...");
     
     setTimeout(() => {
       const btc = data.find(d => d.symbol === "BTC");
-      const price = btc ? btc.price : 81200;
-      addLog("TRADE", `Executing BUY order for 0.05 BTC at $${price.toLocaleString()}`);
+      const currentPrice = btc ? btc.price : 81200;
+      const tradeAmount = 0.02; // Fixed for demo
+      const cost = tradeAmount * currentPrice;
       
       const hash = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase() + "..." + Math.random().toString(16).slice(2, 6).toUpperCase();
       setTxHash(hash);
 
+      setBalance(prev => prev - cost);
+      setHoldings(prev => [
+        { symbol: "BTC", amount: tradeAmount, entry: currentPrice },
+        ...prev
+      ]);
+      setTradeHistory(prev => [
+        { type: "BUY", symbol: "BTC", amount: tradeAmount, price: currentPrice, time: new Date().toLocaleTimeString() },
+        ...prev
+      ]);
+
+      addLog("TRADE", `Filled BUY order: ${tradeAmount} BTC @ $${currentPrice.toLocaleString()}`);
+      
       setTimeout(() => {
         setLoading(false);
         setShowModal(true);
-        addLog("CONFIRM", `Transaction finalized. Hash: ${hash}`);
+        addLog("CONFIRM", `Position opened. On-chain receipt: ${hash}`);
       }, 1500);
     }, 1500);
   };
@@ -230,6 +250,33 @@ function App() {
 
         <div className="dashboard-grid">
           
+          {/* Portfolio Card */}
+          <div className="glass-card portfolio-card">
+            <h3 className="card-title">
+              <svg className="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              Agent Portfolio
+            </h3>
+            <div className="portfolio-content">
+              <div className="balance-item">
+                <span>Available Balance</span>
+                <h2>${balance.toLocaleString(undefined, {minimumFractionDigits: 2})} <small>USDT</small></h2>
+              </div>
+              <div className="positions-section">
+                <h4>Open Positions</h4>
+                {holdings.length === 0 ? (
+                  <p className="empty-txt">No active positions</p>
+                ) : (
+                  holdings.map((h, i) => (
+                    <div className="mini-pos" key={i}>
+                      <span>{h.symbol}</span>
+                      <span>{h.amount} units @ ${h.entry.toLocaleString()}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* AI Sentiment Card */}
           <div className="glass-card insight-card">
             <h3 className="card-title">
