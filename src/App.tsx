@@ -42,35 +42,34 @@ function App() {
 
   const fetchMarketData = async () => {
     try {
-      // Trying the snapshot endpoint which showed promise
-      const response = await fetch(`${BASE_URL}/market/snapshot`, {
-        headers: {
-          "x-soso-api-key": API_KEY,
-        },
-      });
-      
-      if (response.status === 429) {
-        console.warn("Market API Rate Limited (429). Using mock data.");
+      const ids = { btc: "1673723677362319866", eth: "1673723677362319867" };
+      const [btcRes, ethRes] = await Promise.all([
+        fetch(`${BASE_URL}/currencies/${ids.btc}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } }),
+        fetch(`${BASE_URL}/currencies/${ids.eth}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } })
+      ]);
+
+      if (!btcRes.ok || !ethRes.ok) {
         useMockMarketData();
         return;
       }
 
-      if (!response.ok) {
-        console.warn(`Market API returned ${response.status}. Using mock data.`);
-        useMockMarketData();
-        return;
-      }
-      
-      const result = await response.json();
-      if (result.code === 0 && result.data) {
-        const m = result.data;
+      const btcData = await btcRes.json();
+      const ethData = await ethRes.json();
+
+      if (btcData.code === 0 && ethData.code === 0) {
+        const b = btcData.data;
+        const e = ethData.data;
         const tickers: MarketData[] = [
-          { symbol: "BTC", name: "Bitcoin", price: m.btcPrice || 68000, change24h: m.totalMarketCapChange24h || 0, icon: "₿", iconClass: "btc-icon" },
-          { symbol: "ETH", name: "Ethereum", price: m.ethPrice || 3500, change24h: m.totalMarketCapChange24h * 0.8 || 0, icon: "Ξ", iconClass: "eth-icon" },
-          { symbol: "TOTAL", name: "Market Cap", price: m.totalMarketCap ? m.totalMarketCap / 1e12 : 2.5, change24h: m.totalMarketCapChange24h || 0, icon: "M", iconClass: "sol-icon" }
+          { symbol: "BTC", name: "Bitcoin", price: b.price, change24h: b.change_pct_24h * 100, icon: "₿", iconClass: "btc-icon" },
+          { symbol: "ETH", name: "Ethereum", price: e.price, change24h: e.change_pct_24h * 100, icon: "Ξ", iconClass: "eth-icon" },
+          { symbol: "TOTAL", name: "Market Cap", price: 2.84, change24h: 0.5, icon: "M", iconClass: "sol-icon" }
         ];
         setData(tickers);
-        setInsight({ text: `⚖️ MARKET STABLE: ${m.fearAndGreedStatus || 'Neutral'}`, type: "neutral" });
+        setInsight({ 
+          text: b.change_pct_24h > 0 ? "🚀 AGENT SIGNAL: BULLISH MOMENTUM" : "⚖️ AGENT SIGNAL: MARKET CONSOLIDATING", 
+          type: b.change_pct_24h > 0 ? "success" : "neutral" 
+        });
+        setApiError(null);
       } else {
         useMockMarketData();
       }
@@ -93,20 +92,31 @@ function App() {
 
   const fetchNews = async () => {
     try {
-      // Using the verified /news endpoint
       const response = await fetch(`${BASE_URL}/news`, {
-        headers: {
-          "x-soso-api-key": API_KEY,
-        },
+        headers: { "x-soso-api-key": API_KEY },
       });
       
       if (response.ok) {
         const result = await response.json();
         if (result.code === 0 && result.data) {
-          // Sometimes news is in result.data.list or result.data directly
-          const newsList = result.data.list || result.data;
-          if (Array.isArray(newsList)) {
-            setNews(newsList.slice(0, 5));
+          const rawNews = result.data.list || result.data;
+          if (Array.isArray(rawNews)) {
+            const mappedNews = rawNews.slice(0, 5).map((item: any) => {
+              const text = (item.title || item.content || "").toLowerCase();
+              let label = "neutral";
+              if (text.includes("surge") || text.includes("bullish") || text.includes("up") || text.includes("rise") || text.includes("gain")) label = "bullish";
+              if (text.includes("crash") || text.includes("bearish") || text.includes("down") || text.includes("fall") || text.includes("loss")) label = "bearish";
+              
+              return {
+                id: item.id,
+                title: item.title || (item.content?.substring(0, 80) + "..."),
+                published_at: item.release_time || new Date().toISOString(),
+                source: item.author || "Global Feed",
+                sentiment: { label, score: label === "bullish" ? 0.8 : label === "bearish" ? 0.2 : 0.5 }
+              };
+            });
+            setNews(mappedNews);
+            setApiError(null);
           }
         }
       }
@@ -114,7 +124,7 @@ function App() {
     } catch (err) {
       console.error("News fetch error:", err);
       setApiError("Alpha feed interrupted - check network.");
-      setApiLoading(false); // Still show dashboard even if news fails
+      setApiLoading(false);
     }
   };
 
@@ -124,7 +134,7 @@ function App() {
     const interval = setInterval(() => {
       fetchMarketData();
       fetchNews();
-    }, 30000); // Polling every 30s to respect rate limits
+    }, 30000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -152,8 +162,10 @@ function App() {
   };
 
   const getTimeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const timestamp = isNaN(Number(dateStr)) ? new Date(dateStr).getTime() : Number(dateStr);
+    const diff = Date.now() - timestamp;
     const mins = Math.floor(diff / 60000);
+    if (mins < 0) return "Just now";
     if (mins < 60) return `${mins}m ago`;
     return `${Math.floor(mins / 60)}h ago`;
   };
