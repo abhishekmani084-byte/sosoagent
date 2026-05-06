@@ -209,6 +209,17 @@ function App() {
     }, 1500);
   };
 
+  const closePosition = (symbol: string, index: number) => {
+    const pos = holdings[index];
+    const currentPrice = data.find(d => d.symbol === symbol)?.price || pos.entry;
+    const pnl = (currentPrice - pos.entry) * pos.amount;
+    const totalReturn = (pos.entry * pos.amount) + pnl;
+
+    setBalance(prev => prev + totalReturn);
+    setHoldings(prev => prev.filter((_, i) => i !== index));
+    addLog("EXIT", `Closed ${symbol} position. Final P&L: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`);
+  };
+
   const closeModal = () => setShowModal(false);
 
   const formatPrice = (price: number, symbol: string) => {
@@ -299,13 +310,16 @@ function App() {
                   const pnl = (currentPrice - h.entry) * h.amount;
                   return (
                     <div className="position-row" key={i}>
-                      <div>
+                      <div style={{flex: 1}}>
                         <div className="pos-coin">{h.symbol} <span className="pnl-small" style={{color: pnl >= 0 ? 'var(--success)' : 'var(--danger)'}}>{pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}</span></div>
                         <div className="pos-meta">{h.amount} units @ ${h.entry.toLocaleString()}</div>
                       </div>
-                      <div style={{textAlign: 'right'}}>
-                        <div className="pos-coin">${currentPrice.toLocaleString()}</div>
-                        <div className="pos-meta">Market Price</div>
+                      <div style={{textAlign: 'right', display: 'flex', alignItems: 'center', gap: '15px'}}>
+                        <div>
+                          <div className="pos-coin">${currentPrice.toLocaleString()}</div>
+                          <div className="pos-meta">Market</div>
+                        </div>
+                        <button className="exit-btn" onClick={() => closePosition(h.symbol, i)}>EXIT</button>
                       </div>
                     </div>
                   );
