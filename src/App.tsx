@@ -33,15 +33,27 @@ function App() {
   const [apiLoading, setApiLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [logs, setLogs] = useState<{time: string, cmd: string, msg: string}[]>([
+    { time: new Date().toLocaleTimeString(), cmd: "SYSTEM", msg: "Agent initialized and ready." }
+  ]);
+
+  const addLog = (cmd: string, msg: string) => {
+    setLogs(prev => [{ time: new Date().toLocaleTimeString(), cmd, msg }, ...prev].slice(0, 10));
+  };
 
   const connectWallet = () => {
     setWalletAddress("0x7a2d4E98256e29bc4f8e29bc4f8e29bc4f8e29bc4");
+    addLog("AUTH", "Wallet connected: 0x7a2d...bc4");
   };
 
-  const disconnectWallet = () => setWalletAddress(null);
+  const disconnectWallet = () => {
+    setWalletAddress(null);
+    addLog("AUTH", "Wallet disconnected.");
+  };
 
   const fetchMarketData = async () => {
     try {
+      addLog("SCAN", "Fetching market snapshots from SoSoValue...");
       const ids = { btc: "1673723677362319866", eth: "1673723677362319867" };
       const [btcRes, ethRes] = await Promise.all([
         fetch(`${BASE_URL}/currencies/${ids.btc}/market-snapshot`, { headers: { "x-soso-api-key": API_KEY } }),
@@ -144,10 +156,19 @@ function App() {
       return;
     }
     setLoading(true);
+    addLog("EXEC", "Calculating optimal entry based on SoSo sentiment...");
+    
     setTimeout(() => {
-      setLoading(false);
-      setShowModal(true);
-    }, 2500);
+      const btc = data.find(d => d.symbol === "BTC");
+      const price = btc ? btc.price : 81200;
+      addLog("TRADE", `Executing BUY order for 0.05 BTC at $${price.toLocaleString()}`);
+      
+      setTimeout(() => {
+        setLoading(false);
+        setShowModal(true);
+        addLog("CONFIRM", "Transaction finalized on SoDEX Protocol.");
+      }, 1500);
+    }, 1500);
   };
 
   const closeModal = () => setShowModal(false);
@@ -280,9 +301,12 @@ function App() {
                   <span className="terminal-title">AGENT_LOG v1.0.4</span>
                 </div>
                 <div className="terminal-body">
-                  <div className="log-line"><span className="time">[23:01:04]</span> <span className="cmd">SCANNING</span> SoSoValue News Feed...</div>
-                  <div className="log-line"><span className="time">[23:01:08]</span> <span className="cmd">ANALYZING</span> Bitcoin Sentiment Score: 0.84</div>
-                  <div className="log-line"><span className="time">[23:01:12]</span> <span className="cmd">READY</span> Agent synced with ValueChain Node.</div>
+                  {logs.map((log, i) => (
+                    <div className="log-line" key={i}>
+                      <span className="time">[{log.time.split(' ')[0]}]</span> 
+                      <span className="cmd">{log.cmd}</span> {log.msg}
+                    </div>
+                  ))}
                 </div>
               </div>
 
