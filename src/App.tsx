@@ -41,6 +41,7 @@ function App() {
   const [stats, setStats] = useState({ totalTrades: 0, totalVolume: 0 });
   const [sessionStart] = useState<number>(() => Date.now());
   const [currentTime, setCurrentTime] = useState<number>(sessionStart);
+  const [overallSentiment, setOverallSentiment] = useState<number>(65); // Default to 65 (Greed)
 
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -159,6 +160,12 @@ function App() {
               };
             });
             setNews(mappedNews);
+            
+            // Calculate overall sentiment score (0-100)
+            const totalScore = mappedNews.reduce((acc: number, item: any) => acc + item.sentiment.score, 0);
+            const avgScore = (totalScore / mappedNews.length) * 100;
+            setOverallSentiment(Math.round(avgScore));
+            
             setApiError(null);
           }
         }
@@ -364,6 +371,28 @@ function App() {
                  <div className="health-bar">
                    <div className="health-fill" style={{width: '98%'}}></div>
                  </div>
+               </div>
+               
+               <div className="sentiment-meter-wrap">
+                 <div className="meter-labels">
+                   <span className="pos-meta">FEAR</span>
+                   <span className="meter-value">{overallSentiment}</span>
+                   <span className="pos-meta">GREED</span>
+                 </div>
+                 <div className="meter-bar">
+                   <div className="meter-track"></div>
+                   <div 
+                     className="meter-indicator" 
+                     style={{ 
+                       left: `${overallSentiment}%`,
+                       background: overallSentiment > 50 ? 'var(--success)' : 'var(--danger)',
+                       boxShadow: `0 0 15px ${overallSentiment > 50 ? 'var(--success)' : 'var(--danger)'}`
+                     }}
+                   ></div>
+                 </div>
+                 <p className="pos-meta" style={{marginTop: '10px'}}>
+                   Aggregate SoSo Intelligence Sentiment Index
+                 </p>
                </div>
             </div>
 

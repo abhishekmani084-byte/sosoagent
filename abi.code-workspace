@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "../typing-duel/abi"
+		},
+		{
+			"path": "../typing-duel/contracts"
+		},
+		{
+			"path": "../typing-duel/duel"
+		},
+		{
+			"path": "../typing-duel/microcard-reference"
+		},
+		{
+			"path": "../typing-duel/target"
+		},
+		{
+			"path": "../typing-duel/web"
+		}
+	]
+}

@@ -1,48 +1,47 @@
-# SosoAgent: AI-Autonomous Alpha Discovery & Execution
+# SosoAgent: AI-Autonomous Alpha Discovery Dashboard
 
-SosoAgent is an "Agentic Finance" application built for the **SoSoValue Buildathon**. It leverages the SoSoValue API to analyze real-time market sentiment and news signals, providing users with an autonomous trading agent that can be deployed with one click.
+A premium, professional-grade crypto intelligence dashboard built for the **SoSoValue Buildathon 2026**. SosoAgent bridges the gap between research and execution by leveraging SoSoValue's real-time market data and news feeds to drive an agentic trading workflow.
 
-## 🚀 Key Features
+## 🚀 Vision
+In the fast-moving crypto market, traders often struggle with "Analysis Paralysis." SosoAgent uses AI-driven sentiment analysis to distill complex market signals into actionable intelligence, allowing for rapid agent deployment and trade execution.
 
-- **SoSo Intelligence Integration:** Real-time data synchronization with SoSoValue's market snapshot and news feeds.
-- **AI Sentiment Analysis:** Uses SoSoValue's AI-driven sentiment scoring to categorize news as Bullish, Bearish, or Neutral.
-- **Agentic Execution Layer:** A simulated autonomous agent that monitors global signals (Fear & Greed Index) to determine optimal trade execution.
-- **Premium Interface:** A modern, glassmorphic UI designed for high-stakes crypto intelligence.
+## ✨ Key Features
+- **Real-time Market Intelligence**: Integrated with SoSoValue's `market-snapshot` API for live price tracking of BTC, ETH, and SOL.
+- **AI Sentiment Meter**: Aggregates live news feeds via SoSoValue API to calculate a real-time "Fear & Greed" index.
+- **Alpha Feed**: A dedicated section for the latest market-moving news with sentiment labeling (Bullish/Bearish).
+- **Agentic Execution**: A simulated "Agent Orchestrator" terminal that visualizes the on-chain deployment process.
+- **Institutional UI**: A high-performance dashboard featuring glassmorphism, responsive grid layouts, and smooth micro-animations.
 
-## 🛠️ Tech Stack
+## 🛠️ Technical Stack
+- **Frontend**: React 19 + TypeScript
+- **Bundler**: Vite 8
+- **Styling**: Vanilla CSS (Premium Glassmorphism Design System)
+- **API**: SoSoValue Open API (Market & News endpoints)
+- **State Management**: React Hooks (UseState, UseEffect, UseCallback)
 
-- **Frontend:** React 19 + TypeScript + Vite
-- **Styling:** Vanilla CSS (Modern Fluid Layouts)
-- **Data Source:** [SoSoValue OpenAPI v1](https://sosovalue.gitbook.io/soso-value-api-doc/)
-- **Infrastructure:** Integrated with simulated ValueChain liquidity protocols.
+## 📊 Judging Criteria Alignment
 
-## 📦 Getting Started
+### 1. User Value & Practical Impact
+SosoAgent provides immediate value by providing a consolidated view of market health and news sentiment, reducing the time from "reading news" to "making a trade."
 
-1. **Clone the repository:**
-   ```bash
-   git clone <your-repo-link>
-   cd sosovalue-dashboard
-   ```
+### 2. Functionality & Working Demo
+The dashboard is fully functional with live API integrations and a simulated trading environment that includes P&L tracking and wallet connection.
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+### 3. Logic, Workflow & Product Design
+The "Research -> Intelligence -> Execution" workflow is at the core of the design, making it a true utility for modern traders.
 
-3. **Configure Environment:**
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_SOSO_API_KEY=YOUR_API_KEY_HERE
-   ```
+### 4. Data / API Integration
+Uses SoSoValue's robust API infrastructure with secure proxy handling and fallback mechanisms for high reliability.
 
-4. **Run Development Server:**
-   ```bash
-   npm run dev
-   ```
+### 5. UX & Clarity
+Designed with a "Terminal-First" aesthetic that provides high information density without sacrificing clarity or visual appeal.
 
-## 🏆 Buildathon Goals
-
-SosoAgent aims to demonstrate the power of **Agentic Finance** by moving beyond static dashboards and towards autonomous assistants that can act on complex market data provided by SoSoValue.
+## 🚀 Setup & Installation
+1. Clone the repository.
+2. Create a `.env` file and add your `VITE_SOSO_API_KEY`.
+3. Run `npm install`.
+4. Start the dev server: `npm run dev`.
+5. Build for production: `npm run build`.
 
 ---
-Built with ❤️ for the SoSoValue Community.
+*Built with ❤️ for the SoSoValue Buildathon 2026.*
