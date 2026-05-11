@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/soso-api/:path*",
+      "destination": "https://openapi.sosovalue.com/:path*"
+    }
+  ]
+}
